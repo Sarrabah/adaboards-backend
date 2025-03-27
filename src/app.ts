@@ -1,6 +1,8 @@
 import express, { NextFunction, Request, Response } from 'express';
 import jwt from "jsonwebtoken";
 import { PrismaClient, Role} from '@prisma/client'
+import { createUser, findUser } from "../controller/userController";
+import {addBoard, getBoards} from "../controller/boardController";
 
 const app = express();
 const port = 3004;
@@ -29,32 +31,25 @@ const authenticateToken = (req: Request, res: Response, next: NextFunction): any
 };
 
 app.post('/auth/register', async (req: Request, res: Response) => {
-    const { email, password, fullname } = req.body;
+    
+    try{
+        const { email, password, fullname } = req.body;
 
-    if (!email || !password || !fullname) {
-        res.status(400).json({ message: "Données invalides" });
+        if (!email || !password || !fullname) {
+            res.status(400).json({ message: "Données invalides" });
+        }
+
+        const message = await createUser(email, password, fullname);
+        res.status(201).json({ message });
+
+    } catch (error: any) {
+        res.status(400).json({ message: error.message });
     }
-
-    const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) {
-        res.status(400).json({ message: "Utilisateur déjà existant" });
-    }
-
-    await prisma.user.create({
-        data: {
-            fullname,
-            email,
-            password,
-        },
-    });
-
-    res.status(201).json({ message: "Utilisateur créé avec succès" });
 });
 
 app.post("/auth/login", async (req: Request, res: Response) => {
     const { email, password } = req.body;
-    const user = await prisma.user.findUnique({ where: { email } });
-
+    const user = await findUser(email)
     if (!user || !password) {
         res.status(401).json({ message: "Identifiants invalides" });
         return 
@@ -78,38 +73,17 @@ app.get('/protected', authenticateToken, async (req: Request, res: Response) => 
 
 app.get('/boards', authenticateToken, async (req: Request, res: Response) => {
     const userId: number = req.user.userId;
-    const userBoards = await prisma.user_Board.findMany({
-        where: { userId },
-        include: {
-            board: true
-        },
-    });
-
-    const boards = userBoards.map(ub => ub.board);
-
+    const boards= await getBoards(userId)
     res.json({boards});
 });
-app.post("/boards", authenticateToken, async (req: Request, res: Response) => {
+app.post("/board", authenticateToken, async (req: Request, res: Response) => {
     const {name} = req.body;
     const userId: number = req.user.id;
     const role= Role.OWNER;
     if (!name) {
         res.status(401).json({ message: "Missing name" });
     }
-    const newBoard = await prisma.board.create({
-        data: {
-            name,
-            User_Board: {
-                create: {
-                   userId,
-                    role
-                }
-            }
-        },
-        include: {
-            User_Board: true
-        }
-    });
+    const newBoard = await addBoard(name, userId, role)
     res.status(201).json(newBoard);
 })
 app.listen(port, () => {
