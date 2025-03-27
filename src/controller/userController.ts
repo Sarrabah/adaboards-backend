@@ -1,26 +1,31 @@
 import { PrismaClient} from '@prisma/client'
 
-const prisma = new PrismaClient()
+export class UserController {
+    prismaClient: PrismaClient
 
-export const createUser = async (email: string, password: string, fullname : string): Promise<any> => {
-
-    const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) { 
-        throw new Error ("Utilisateur déjà existant")
+    public constructor(prismaClient: PrismaClient) {
+        this.prismaClient = prismaClient;
     }
 
-    const user = await prisma.user.create({
-        data: {
-            fullname,
-            email,
-            password,
-        },
-    });
-    console.log(user)
-    return user;
-}
+    public async createUser(email: string, password: string, fullname : string): Promise<any> {
+        const existingUser = await this.prismaClient.user.findUnique({ where: { email } });
+        if (existingUser) { 
+            throw new Error ("Utilisateur déjà existant")
+        }
 
-export const findUser = async(email: string) => {
-    const user = await prisma.user.findUnique({ where: { email } });
-    return user
+        const user = await this.prismaClient.user.create({
+            data: {
+                fullname,
+                email,
+                password,
+            },
+        });
+        console.log(user)
+        return user;
+    }
+
+    public async findUser(email: string): Promise<any> {
+        const user = await this.prismaClient.user.findUnique({ where: { email } });
+        return user
+    }
 }

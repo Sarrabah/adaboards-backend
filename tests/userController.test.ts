@@ -1,4 +1,4 @@
-import { createUser } from "../src/controller/userController";
+import { UserController } from "../src/controller/userController";
 import { PrismaClient } from "@prisma/client";
 
 jest.mock("@prisma/client", () => {
@@ -16,22 +16,22 @@ jest.mock("@prisma/client", () => {
 const prisma = new PrismaClient();
 
 
-
-describe("userService", () => {
+describe("userController", () => {
     afterEach(() => {
-        jest.clearAllMocks(); // Nettoyer les mocks après chaque test
+        jest.clearAllMocks();
     });
 
     it("devrait créer un utilisateur", async () => {
         const mockUser = { id: 1, email: "test@example.com", name: "Test" , fullname: "Test"};
         (prisma.user.create as jest.Mock).mockResolvedValue(mockUser);
         (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
-        
-        const user = await createUser("test@example.com", "Test", "Test");
+
+        const userController = new UserController(prisma)
+        const user = await userController.createUser("test@example.com", "Test", "Test");
 
         expect(user).toEqual(mockUser);
         expect(prisma.user.create).toHaveBeenCalledWith({
-            data: { email: "test@example.com", name: "Test", fullname: "Test" },
+            data: { email: "test@example.com", fullname: "Test", password: "Test" },
         });
     });
 })
