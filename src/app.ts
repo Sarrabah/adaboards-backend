@@ -1,8 +1,8 @@
 import express, { NextFunction, Request, Response } from 'express';
 import jwt from "jsonwebtoken";
 import { PrismaClient, Role} from '@prisma/client'
-import { createUser, findUser } from "../controller/userController";
-import {addBoard, getBoards} from "../controller/boardController";
+import { createUser, findUser } from "./controller/userController";
+import {addBoard, getBoards} from "./controller/boardController";
 
 const app = express();
 const port = 3004;
