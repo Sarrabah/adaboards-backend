@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "jest --passWithNoTests",
-    "start": "nodemon src/app.ts"
+    "start": "nodemon src/app.ts",
+    "coverage": "jest --coverage"
   },
   "keywords": [],
   "author": "",
